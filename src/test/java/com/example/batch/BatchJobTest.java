@@ -1,29 +1,29 @@
 package com.example.batch;
 
 import com.example.config.BatchConfig;
-import com.example.model.Customer;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.batch.core.*;
 import org.springframework.batch.test.JobLauncherTestUtils;
-import org.springframework.batch.test.context.SpringBatchTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertEquals;
 
-@SpringBatchTest
+@RunWith(SpringRunner.class)
 @SpringBootTest(classes = {BatchConfig.class})
 @TestPropertySource(properties = {
     "outputFile=target/test-output/customers.csv"
 })
-class BatchJobTest {
+public class BatchJobTest {
 
     @Autowired
     private JobLauncherTestUtils jobLauncherTestUtils;
 
     @Test
-    void testJobExecution() throws Exception {
+    public void testJobExecution() throws Exception {
         JobParameters jobParameters = new JobParametersBuilder()
             .addString("outputFile", "target/test-output/customers.csv")
             .toJobParameters();

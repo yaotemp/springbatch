@@ -6,10 +6,21 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.JobParametersInvalidException;
+import org.springframework.batch.core.JobParametersValidator;
+import org.springframework.batch.core.configuration.annotation.DefaultBatchConfigurer;
+import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
+import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.launch.support.SimpleJobLauncher;
+import org.springframework.batch.core.repository.support.MapJobRepositoryFactoryBean;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
 import org.springframework.batch.item.file.transform.DelimitedLineAggregator;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
@@ -62,8 +73,8 @@ public class BatchConfig {
 
     @Bean
     public Step step1() {
-        return new StepBuilder("step1", jobRepository)
-            .<Customer, Customer>chunk(10, transactionManager)
+        return new StepBuilder("step1")
+            .<Customer, Customer>chunk(10)
             .reader(reader())
             .processor(processor())
             .writer(writer())
@@ -77,7 +88,7 @@ public class BatchConfig {
 
     @Bean
     public Job exportCustomerJob(JobParametersBuilder jobParametersBuilder) {
-        return new JobBuilder("exportCustomerJob", jobRepository)
+        return new JobBuilder("exportCustomerJob")
             .start(step1())
             .validator(validator())
             .build();
@@ -85,10 +96,14 @@ public class BatchConfig {
 
     @Bean
     public JobParametersValidator validator() {
-        return new DefaultJobParametersValidator(
-            new String[]{"outputFile"},
-            new String[]{}
-        );
+        return new JobParametersValidator() {
+            @Override
+            public void validate(JobParameters parameters) throws JobParametersInvalidException {
+                if (parameters == null || parameters.getString("outputFile") == null) {
+                    throw new JobParametersInvalidException("outputFile parameter is required");
+                }
+            }
+        };
     }
 
     @Bean

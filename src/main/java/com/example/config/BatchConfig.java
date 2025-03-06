@@ -29,17 +29,23 @@ import org.springframework.transaction.PlatformTransactionManager;
 import javax.sql.DataSource;
 
 @Configuration
-public class BatchConfig {
+@EnableBatchProcessing
+public class BatchConfig extends DefaultBatchConfigurer {
 
     private final DataSource dataSource;
-    private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
 
-    public BatchConfig(DataSource dataSource, JobRepository jobRepository,
+    public BatchConfig(DataSource dataSource,
                       PlatformTransactionManager transactionManager) {
         this.dataSource = dataSource;
-        this.jobRepository = jobRepository;
         this.transactionManager = transactionManager;
+    }
+
+    @Override
+    protected JobRepository createJobRepository() throws Exception {
+        MapJobRepositoryFactoryBean factory = new MapJobRepositoryFactoryBean();
+        factory.setTransactionManager(transactionManager);
+        return factory.getObject();
     }
 
     @Bean
